@@ -24,7 +24,9 @@
   <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       /* ---- Paleta pastel (lila / rosa / turquesa) ---- */
@@ -545,6 +547,7 @@
       gap: 12px;
       align-items: center;
       width: 100%;
+      min-width: 0;
       min-height: 92px;
       text-align: left;
       box-shadow: var(--shadow-sm);
@@ -553,10 +556,6 @@
 
     .entry-card:active {
       transform: scale(.985)
-    }
-
-    .entry-card .entry-date {
-      font-weight: 700
     }
 
     .entry-card small {
@@ -599,8 +598,9 @@
     }
 
     .entry-meta {
-      width: 82px;
-      min-width: 82px;
+      width: 68px;
+      min-width: 68px;
+      max-width: 68px;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -612,7 +612,10 @@
       font-size: 11px;
       font-weight: 700;
       color: var(--muted);
-      white-space: nowrap
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%
     }
 
     /* ---------- Calendar ---------- */
@@ -867,7 +870,7 @@
 
     .back {
       background: none;
-      color: var(--ink);
+      color: var(--lilac);
       font-weight: 700
     }
 
@@ -972,15 +975,10 @@
     #drawCanvas {
       display: block;
       width: 100%;
-      height: 250px;
+      height: 320px;
       touch-action: none
     }
 
-    .draw-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px
-    }
 
     /* ---------- Media / stickers ---------- */
     .media-grid {
@@ -1307,64 +1305,77 @@
     }
 
     /* ---------- Drawing tool ---------- */
-    .draw-controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 12px 0
+    .draw-modal-card {
+      padding: 14px
     }
 
-    .draw-control {
-      background: var(--cream);
-      border-radius: 14px;
-      padding: 9px
-    }
-
-    .draw-control label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--ink);
-      margin-bottom: 5px
-    }
-
-    .draw-control input[type="range"] {
-      width: 100%;
-      accent-color: var(--lilac)
-    }
-
-    .draw-control input[type="color"] {
-      width: 100%;
-      height: 32px;
-      border: 0;
-      border-radius: 8px;
-      padding: 1px;
-      background: transparent
-    }
-
-    .draw-preview {
+    .draw-topbar {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
-      border-radius: 14px;
-      background: var(--cream);
-      margin: 8px 0
+      margin-bottom: 12px
     }
 
-    .draw-preview-dot {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      box-shadow: var(--shadow-sm)
+    .draw-topbar-title {
+      flex: 1;
+      min-width: 0;
+      font-family: "Quicksand", "Poppins", sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .draw-icon-btn {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      border-radius: 12px;
+      background: var(--cream);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      transition: .12s
+    }
+
+    .draw-icon-btn svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round
+    }
+
+    .draw-icon-btn:disabled {
+      opacity: .35;
+      cursor: default
+    }
+
+    .draw-icon-btn:active:not(:disabled) {
+      transform: scale(.92);
+      background: var(--lilac-soft)
+    }
+
+    .draw-history {
+      display: flex;
+      gap: 6px
+    }
+
+    .draw-done-btn {
+      padding: 9px 16px;
+      font-size: 13.5px;
+      border-radius: 13px;
+      white-space: nowrap
     }
 
     .draw-stage {
       position: relative;
       width: 100%;
-      height: 360px;
+      height: 320px;
       border-radius: 18px;
       overflow: hidden;
       box-shadow: var(--shadow-sm)
@@ -1388,11 +1399,114 @@
       cursor: crosshair
     }
 
-    @media(max-width:480px) {
-      .draw-controls {
-        grid-template-columns: 1fr
-      }
+    .draw-tools-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px
     }
+
+    .draw-tool-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 9px 4px;
+      border-radius: 14px;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 10.5px;
+      font-weight: 700;
+      transition: .12s
+    }
+
+    .draw-tool-btn span {
+      font-size: 18px;
+      line-height: 1
+    }
+
+    .draw-tool-btn.active {
+      background: linear-gradient(135deg, var(--lilac-soft), var(--pink-soft));
+      box-shadow: 0 0 0 2px var(--lilac)
+    }
+
+    .draw-size-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 9px 12px;
+      border-radius: 14px;
+      background: var(--cream)
+    }
+
+    .draw-size-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap
+    }
+
+    .draw-size-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--lilac)
+    }
+
+    .draw-size-value {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      min-width: 32px;
+      text-align: right
+    }
+
+    .draw-color-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 12px
+    }
+
+    .draw-swatch {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 50%;
+      box-shadow: var(--shadow-sm);
+      transition: transform .12s
+    }
+
+    .draw-swatch.active {
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--lilac)
+    }
+
+    .draw-swatch:active {
+      transform: scale(.9)
+    }
+
+    .draw-swatch-custom {
+      padding: 0;
+      border: 0;
+      cursor: pointer;
+      background: conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #30b0c7, #007aff, #af52de, #ff2d55, #ff3b30)
+    }
+
+    .draw-swatch-custom::-webkit-color-swatch-wrapper {
+      padding: 0;
+      border-radius: 50%
+    }
+
+    .draw-swatch-custom::-webkit-color-swatch {
+      border: 0;
+      border-radius: 50%
+    }
+
+    .draw-swatch-custom::-moz-color-swatch {
+      border: 0;
+      border-radius: 50%
+    }
+
 
     /* ---------- Daily cover ---------- */
     .daily-cover {
@@ -1682,7 +1796,9 @@
               <rect x="14" y="9" width="36" height="46" rx="7" fill="#fff" />
               <rect x="14" y="9" width="9" height="46" rx="4.5" fill="#EFE3FA" />
               <path d="M38 9 H46 V30 L42 25 L38 30 Z" fill="url(#brandRibbon)" />
-              <path d="M32 46.5c-5.4-3.6-8-6.8-8-10.3 0-2.6 2.1-4.7 4.7-4.7 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.6 0 4.7 2.1 4.7 4.7 0 3.5-2.6 6.7-8 10.3z" fill="#F5A9CE" />
+              <path
+                d="M32 46.5c-5.4-3.6-8-6.8-8-10.3 0-2.6 2.1-4.7 4.7-4.7 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.6 0 4.7 2.1 4.7 4.7 0 3.5-2.6 6.7-8 10.3z"
+                fill="#F5A9CE" />
             </svg>
           </div>
           <div><strong>Mi Diario</strong><small>tu rinconcito personal</small></div>
@@ -1829,14 +1945,17 @@
       <section id="editorPage" class="page hidden">
         <div id="editor" class="editor pattern-dots diary-canvas">
           <div class="editor-top">
-            <button id="backEditor" class="back">← Volver</button>
+            <button id="backEditor" class="back center gap-2">
+              <i class="uil uil-arrow-left icon-lg"></i>
+              Volver
+            </button>
             <div class="date-mood">
               <div class="date-edit-wrap">
                 <div id="editorDate" class="date-big" title="Toca para cambiar la fecha"></div>
-                <input id="editorDateInput" type="date" class="date-edit-input" aria-label="Cambiar fecha de la entrada">
+                <input id="editorDateInput" type="date" class="date-edit-input"
+                  aria-label="Cambiar fecha de la entrada">
               </div>
-              <button id="editorMoodButton" class="mood-face"
-                title="Cambiar cómo me siento">😊</button>
+              <button id="editorMoodButton" class="mood-face" title="Cambiar cómo me siento">😊</button>
             </div>
             <button id="deleteEntry" class="icon-btn" title="Eliminar entrada">🗑️</button>
           </div>
@@ -1889,26 +2008,65 @@
   </div>
 
   <div id="drawModal" class="modal hidden">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h3>Haz un dibujito ✏️</h3><button class="close" data-close="drawModal">×</button>
-      </div>
-      <div class="draw-controls">
-        <div class="draw-control"><label>Grosor <span id="drawSizeValue">4 px</span></label><input id="drawSize"
-            type="range" min="1" max="40" value="4"></div>
-        <div class="draw-control"><label>Opacidad <span id="drawOpacityValue">100%</span></label><input id="drawOpacity"
-            type="range" min="5" max="100" value="100"></div>
-        <div class="draw-control"><label>Color del lápiz</label><input id="drawColor" type="color" value="#765fbd">
+    <div class="modal-card draw-modal-card">
+      <div class="draw-topbar">
+        <button class="draw-icon-btn close" id="drawCancel" data-close="drawModal" title="Cancelar"
+          aria-label="Cancelar">
+          <svg viewBox="0 0 24 24">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+        <div class="draw-topbar-title">Dibujar ✏️</div>
+        <div class="draw-history">
+          <button class="draw-icon-btn" id="drawUndo" title="Deshacer" aria-label="Deshacer" disabled>
+            <svg viewBox="0 0 24 24">
+              <path d="M9 7 4 12l5 5" />
+              <path d="M4 12h11a5 5 0 0 1 0 10h-1" />
+            </svg>
+          </button>
+          <button class="draw-icon-btn" id="drawRedo" title="Rehacer" aria-label="Rehacer" disabled>
+            <svg viewBox="0 0 24 24">
+              <path d="m15 7 5 5-5 5" />
+              <path d="M20 12H9a5 5 0 0 0 0 10h1" />
+            </svg>
+          </button>
         </div>
-        <div class="draw-control"><label>Color del papel</label><input id="drawBgColor" type="color" value="#fffdf9">
-        </div>
+        <button id="saveDraw" class="primary-btn draw-done-btn center gap-2">
+          Hecho
+          <i class="uil uil-check icon-md"></i>
+        </button>
       </div>
-      <div class="draw-preview"><span>Vista</span><span id="drawPreviewDot" class="draw-preview-dot"></span><span
-          id="drawPreviewText">4 px · 100%</span></div>
+
       <div class="draw-stage"><canvas id="drawBgCanvas"></canvas><canvas id="drawCanvas"></canvas></div>
-      <div class="draw-actions"><button id="clearDraw" class="secondary-btn">Limpiar</button><button id="saveDraw"
-          class="primary-btn" style="flex:1">Usar dibujo</button></div>
+
+      <div class="draw-tools-row">
+        <button class="draw-tool-btn active" id="toolPen" data-tool="pen"><span>✏️</span>Dibujar</button>
+        <button class="draw-tool-btn" id="toolEraser" data-tool="eraser"><span>🧽</span>Borrar</button>
+        <button class="draw-tool-btn" id="clearDraw"><span>🗑️</span>Limpiar</button>
+      </div>
+
+      <div class="draw-size-row">
+        <span class="draw-size-label">Grosor</span>
+        <input id="drawSize" type="range" min="1" max="40" value="4">
+        <span id="drawSizeValue" class="draw-size-value">4 px</span>
+      </div>
+
+      <div class="draw-color-row center-item gap-3">
+        <button class="draw-swatch active" data-color="#403C58" style="background:#403C58"></button>
+        <button class="draw-swatch" data-color="#8D74E8" style="background:#8D74E8"></button>
+        <button class="draw-swatch" data-color="#EE8DC0" style="background:#EE8DC0"></button>
+        <button class="draw-swatch" data-color="#5FC7B4" style="background:#5FC7B4"></button>
+        <button class="draw-swatch" data-color="#F5A623" style="background:#F5A623"></button>
+        <button class="draw-swatch" data-color="#E85D5D" style="background:#E85D5D"></button>
+        <button class="draw-swatch" data-color="#FFFFFF"
+          style="background:#FFFFFF;box-shadow:0 0 0 1px #e2d8e7,var(--shadow-sm)"></button>
+        <div></div>
+        <label for="drawColor">Custom:</label>
+        <input id="drawColor" type="color" class="draw-swatch draw-swatch-custom" value="#403c58"
+          title="Color personalizado">
+      </div>
     </div>
+  </div>
   </div>
 
   <div id="coverModal" class="modal hidden">
@@ -1972,6 +2130,15 @@
     </div>
   </div>
 
+  <div id="moodModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>¿Cómo te sientes hoy? ♡</h3><button class="close" data-close="moodModal">×</button>
+      </div>
+      <div id="modalPatternGridMood" class="center-item gap-3"></div>
+    </div>
+  </div>
+
   <div id="pinModal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -1982,8 +2149,8 @@
           placeholder="••••" autocomplete="off">
       </label>
       <label class="cover-text-label" style="margin-top:12px">Nuevo PIN (4 dígitos)
-        <input id="pinNewInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4"
-          placeholder="••••" autocomplete="off">
+        <input id="pinNewInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••"
+          autocomplete="off">
       </label>
       <label class="cover-text-label" style="margin-top:12px">Confirma el nuevo PIN
         <input id="pinConfirmInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4"
@@ -2063,6 +2230,9 @@
     function dateFromISO(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
     function formatDate(s, long = true) {
       return new Intl.DateTimeFormat("es-MX", { weekday: long ? "long" : "short", day: "numeric", month: "long" }).format(dateFromISO(s));
+    }
+    function formatDateCompact(s) {
+      return new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" }).format(dateFromISO(s));
     }
     function escapeHTML(str = "") { return str.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])) }
     function uid() { return crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(16).slice(2) }
@@ -2290,7 +2460,7 @@
         <span class="entry-preview">${escapeHTML(e.text || "Sin texto todavía…")}</span>
       </div>
       <div class="entry-meta">
-        <span class="entry-date">${formatDate(e.date)}</span>
+        <span class="entry-date">${formatDateCompact(e.date)}</span>
         <span class="mini-mood">${moodEmoji(e.mood)}</span>
       </div>
     </button>`).join("") : `<div class="empty">Todavía no hay recuerdos guardados.<br>Escribe algo bonito sobre tu día ✨</div>`;
@@ -2594,11 +2764,19 @@
     async function openFreeStickerModal() { openModal('stickerModal'); await renderModalStickers(); $$("#modalStickerGallery [data-mid]").forEach(b => b.onclick = async () => { const s = (await allStickers()).find(x => x.id === b.dataset.mid); if (s) { insertStickerInline(s.src); closeModal('stickerModal') } }) }
     function setupFreeDraw() {
       const canvas = $("#drawCanvas"), bgCanvas = $("#drawBgCanvas");
-      const ctx = canvas.getContext("2d"), bgCtx = bgCanvas.getContext("2d");
-      const size = $("#drawSize"), opacity = $("#drawOpacity"), color = $("#drawColor"), bg = $("#drawBgColor");
-      const sizeValue = $("#drawSizeValue"), opacityValue = $("#drawOpacityValue");
-      const preview = $("#drawPreviewDot"), previewText = $("#drawPreviewText");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true }), bgCtx = bgCanvas.getContext("2d");
+      const sizeInput = $("#drawSize"), sizeValue = $("#drawSizeValue");
+      const colorInput = $("#drawColor");
+      const swatches = $$(".draw-color-row .draw-swatch");
+      const toolPen = $("#toolPen"), toolEraser = $("#toolEraser");
+      const undoBtn = $("#drawUndo"), redoBtn = $("#drawRedo");
+      const PAPER_COLOR = "#FFFFFF";
+
       let drawing = false;
+      let currentTool = "pen";
+      let currentColor = colorInput.value;
+      let undoStack = [];
+      let redoStack = [];
 
       function fit() {
         const r = canvas.getBoundingClientRect(), d = Math.max(1, window.devicePixelRatio || 1);
@@ -2608,29 +2786,103 @@
         canvas.style.height = bgCanvas.style.height = r.height + "px";
         ctx.setTransform(d, 0, 0, d, 0, 0); bgCtx.setTransform(d, 0, 0, d, 0, 0);
         setBackground(); applyBrush();
+        undoStack = []; redoStack = []; updateHistoryButtons();
       }
       function setBackground() {
         const r = canvas.getBoundingClientRect();
-        bgCtx.save(); bgCtx.globalAlpha = 1; bgCtx.fillStyle = bg.value; bgCtx.fillRect(0, 0, r.width, r.height); bgCtx.restore();
+        bgCtx.save(); bgCtx.globalAlpha = 1; bgCtx.fillStyle = PAPER_COLOR; bgCtx.fillRect(0, 0, r.width, r.height); bgCtx.restore();
       }
       function applyBrush() {
-        ctx.lineWidth = Number(size.value); ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctx.globalAlpha = Number(opacity.value) / 100; ctx.strokeStyle = color.value; ctx.globalCompositeOperation = "source-over";
+        ctx.lineWidth = Number(sizeInput.value); ctx.lineCap = "round"; ctx.lineJoin = "round";
+        ctx.globalAlpha = 1;
+        if (currentTool === "eraser") {
+          ctx.globalCompositeOperation = "destination-out";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = currentColor;
+        }
       }
-      function updateUI() {
-        const s = Number(size.value), o = Number(opacity.value);
-        sizeValue.textContent = s + " px"; opacityValue.textContent = o + "%"; previewText.textContent = s + " px · " + o + "%";
-        const d = Math.max(14, Math.min(38, s + 12)); preview.style.width = d + "px"; preview.style.height = d + "px";
-        preview.style.background = color.value; preview.style.opacity = o / 100; applyBrush();
+      function updateHistoryButtons() {
+        undoBtn.disabled = undoStack.length === 0;
+        redoBtn.disabled = redoStack.length === 0;
+      }
+      function snapshot() {
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
+      }
+      function pushUndo() {
+        undoStack.push(snapshot());
+        if (undoStack.length > 25) undoStack.shift();
+        redoStack = [];
+        updateHistoryButtons();
+      }
+      function restore(imgData) {
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.putImageData(imgData, 0, 0);
+        ctx.restore();
+        const d = Math.max(1, window.devicePixelRatio || 1);
+        ctx.setTransform(d, 0, 0, d, 0, 0);
+        applyBrush();
+      }
+      function undo() {
+        if (!undoStack.length) return;
+        redoStack.push(snapshot());
+        const prev = undoStack.pop();
+        restore(prev);
+        updateHistoryButtons();
+      }
+      function redo() {
+        if (!redoStack.length) return;
+        undoStack.push(snapshot());
+        const next = redoStack.pop();
+        restore(next);
+        updateHistoryButtons();
+      }
+      function selectTool(tool) {
+        currentTool = tool;
+        toolPen.classList.toggle("active", tool === "pen");
+        toolEraser.classList.toggle("active", tool === "eraser");
+        applyBrush();
+      }
+      function selectColor(hex, swatchEl) {
+        currentColor = hex;
+        selectTool("pen");
+        swatches.forEach(s => s.classList.remove("active"));
+        colorInput.classList.remove("active");
+        (swatchEl || colorInput).classList.add("active");
+        applyBrush();
+      }
+      function updateSizeUI() {
+        sizeValue.textContent = Number(sizeInput.value) + " px";
+        applyBrush();
       }
       function pos(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top } }
-      canvas.onpointerdown = e => { drawing = true; canvas.setPointerCapture(e.pointerId); applyBrush(); const q = pos(e); ctx.beginPath(); ctx.moveTo(q.x, q.y) };
+
+      canvas.onpointerdown = e => {
+        drawing = true; canvas.setPointerCapture(e.pointerId);
+        pushUndo();
+        applyBrush();
+        const q = pos(e); ctx.beginPath(); ctx.moveTo(q.x, q.y);
+        ctx.lineTo(q.x + 0.01, q.y + 0.01); ctx.stroke();
+      };
       canvas.onpointermove = e => { if (!drawing) return; const q = pos(e); ctx.lineTo(q.x, q.y); ctx.stroke() };
       const finish = () => { drawing = false; ctx.closePath() };
       canvas.onpointerup = finish; canvas.onpointercancel = finish;
-      size.oninput = updateUI; opacity.oninput = updateUI; color.oninput = updateUI; bg.oninput = setBackground;
 
-      $("#clearDraw").onclick = () => { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.restore(); setBackground() };
+      sizeInput.oninput = updateSizeUI;
+      swatches.forEach(s => s.onclick = () => selectColor(s.dataset.color, s));
+      colorInput.oninput = () => selectColor(colorInput.value, null);
+      toolPen.onclick = () => selectTool("pen");
+      toolEraser.onclick = () => selectTool("eraser");
+      undoBtn.onclick = undo;
+      redoBtn.onclick = redo;
+
+      $("#clearDraw").onclick = () => {
+        pushUndo();
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.restore();
+        const d = Math.max(1, window.devicePixelRatio || 1);
+        ctx.setTransform(d, 0, 0, d, 0, 0); applyBrush();
+      };
       $("#saveDraw").onclick = () => {
         const r = canvas.getBoundingClientRect(), d = Math.max(1, window.devicePixelRatio || 1);
         const out = document.createElement("canvas"); out.width = Math.round(r.width * d); out.height = Math.round(r.height * d);
@@ -2638,9 +2890,12 @@
         const img = document.createElement("img"); img.src = out.toDataURL("image/png"); img.className = "inline-drawing"; img.contentEditable = "false";
         insertNodeAtCursor(img); closeModal("drawModal"); $("#canvasContent").focus();
       };
-      updateUI(); requestAnimationFrame(fit);
+
+      selectTool("pen");
+      updateSizeUI();
+      requestAnimationFrame(fit);
     }
-    function openMoodChooser() { openModal('themeModal'); $("#themeModal .modal-head h3").textContent = '¿Cómo te sientes hoy? ♡'; $("#modalPatternGrid").innerHTML = `<div class="mood-picker">${moodButtons(freeCanvasState.mood)}</div>`; $("#modalColorRow").innerHTML = ''; $$("#modalPatternGrid .mood-chip").forEach(b => b.onclick = () => { freeCanvasState.mood = b.dataset.mood; $("#editorMoodButton").dataset.mood = b.dataset.mood; $("#editorMoodButton").textContent = moodEmoji(b.dataset.mood); closeModal('themeModal') }) }
+    function openMoodChooser() { openModal('moodModal'); $("#modalPatternGridMood").innerHTML = `<div class="mood-picker">${moodButtons(freeCanvasState.mood)}</div>`; $("#modalColorRow").innerHTML = ''; $$("#modalPatternGrid .mood-chip").forEach(b => b.onclick = () => { freeCanvasState.mood = b.dataset.mood; $("#editorMoodButton").dataset.mood = b.dataset.mood; $("#editorMoodButton").textContent = moodEmoji(b.dataset.mood); closeModal('moodModal') }) }
     function setupFreeEditorEvents() {
       // Replace, rather than add, the handler so "Escribir" can never trigger
       // an older editor-opening handler.
