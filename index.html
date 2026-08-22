@@ -93,6 +93,15 @@
       color: var(--ink)
     }
 
+    .hw-30 {
+      height: 30px !important;
+      width: 30px !important;
+    }
+
+    .rounded-xs {
+      border-radius: 8px !important;
+    }
+
     .center {
       display: flex !important;
       align-items: center;
@@ -533,6 +542,25 @@
     }
 
     /* ---------- Entry list ---------- */
+    .entries-filter {
+      width: 100%;
+      border: none;
+      background: var(--cream);
+      border-radius: 14px;
+      padding: 11px 34px 11px 14px;
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23948DAA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px
+    }
+
     .entry-list {
       display: grid;
       gap: 12px
@@ -639,6 +667,28 @@
       font-size: 19px;
       text-transform: capitalize;
       color: var(--ink)
+    }
+
+    .cal-selects {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+      justify-content: center
+    }
+
+    .cal-select {
+      border: none;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: "Quicksand", "Poppins", sans-serif;
+      font-weight: 700;
+      font-size: 13.5px;
+      text-transform: capitalize;
+      text-align: center;
+      text-align-last: center;
+      border-radius: 12px;
+      padding: 8px 6px;
+      box-shadow: var(--shadow-sm)
     }
 
     .cal-nav {
@@ -870,7 +920,7 @@
 
     .back {
       background: none;
-      color: var(--lilac);
+      color: var(--ink);
       font-weight: 700
     }
 
@@ -975,7 +1025,7 @@
     #drawCanvas {
       display: block;
       width: 100%;
-      height: 320px;
+      height: 250px;
       touch-action: none
     }
 
@@ -1840,8 +1890,9 @@
         <input id="coverInput" type="file" accept="image/*" class="hidden">
         <div class="section">
           <div class="section-head">
-            <h3>Mis últimos días</h3><button data-page="calendarPage">Ver calendario</button>
+            <h3>Mis entradas</h3><button data-page="calendarPage">Ver calendario</button>
           </div>
+          <select id="entriesFilter" class="entries-filter" aria-label="Filtrar por mes"></select>
           <div id="recentEntries" class="entry-list"></div>
         </div>
       </section>
@@ -1852,10 +1903,21 @@
             <h2>Mi calendario ♡</h2>
             <p>Tus recuerdos, día por día.</p>
           </div>
+          <button id="goToday" class="secondary-btn">Hoy</button>
         </div>
         <div class="calendar">
-          <div class="cal-head"><button id="prevMonth" class="cal-nav">‹</button><strong id="calMonth"></strong><button
-              id="nextMonth" class="cal-nav">›</button></div>
+          <div class="cal-head">
+            <button id="prevMonth" class="cal-nav hw-30 center rounded-xs">
+              <i class="uil uil-angle-left icon-md"></i>
+            </button>
+            <div class="cal-selects">
+              <select id="calMonthSelect" class="cal-select" aria-label="Mes"></select>
+              <select id="calYearSelect" class="cal-select" aria-label="Año"></select>
+            </div>
+            <button id="nextMonth" class="cal-nav hw-30 center rounded-xs">
+              <i class="uil uil-angle-right icon-md"></i>
+            </button>
+          </div>
           <div class="weekdays">
             <div class="weekday">LUN</div>
             <div class="weekday">MAR</div>
@@ -2067,7 +2129,6 @@
       </div>
     </div>
   </div>
-  </div>
 
   <div id="coverModal" class="modal hidden">
     <div class="modal-card cover-modal-card">
@@ -2135,7 +2196,7 @@
       <div class="modal-head">
         <h3>¿Cómo te sientes hoy? ♡</h3><button class="close" data-close="moodModal">×</button>
       </div>
-      <div id="modalPatternGridMood" class="center-item gap-3"></div>
+      <div id="moodGrid" class="center-item gap-3"></div>
     </div>
   </div>
 
@@ -2445,13 +2506,31 @@
     }
     function moodEmoji(id) { return MOODS.find(m => m.id === id)?.emoji || "♡" }
 
-    async function renderHome() {
-      $("#todayLabel").textContent = formatDate(currentDate);
-      await renderCover();
+    let entriesFilterValue = "all";
+    function monthYearKey(dateStr) { return (dateStr || "").slice(0, 7) }
+    function monthYearLabel(key) {
+      const [y, m] = key.split("-").map(Number);
+      const label = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" }).format(new Date(y, m - 1, 1));
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    }
 
-      const entries = (await dbGetAll("entries"))
-        .sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.updatedAt || 0) - (a.updatedAt || 0))
-        .slice(0, 8);
+    async function renderEntriesList() {
+      const all = await dbGetAll("entries");
+
+      const keys = [...new Set(all.map(e => monthYearKey(e.date)))].filter(Boolean).sort((a, b) => b.localeCompare(a));
+      const filterEl = $("#entriesFilter");
+      if (filterEl) {
+        if (entriesFilterValue !== "all" && !keys.includes(entriesFilterValue)) entriesFilterValue = "all";
+        filterEl.innerHTML = `<option value="all">Todos los meses</option>` + keys.map(k => `<option value="${k}">${monthYearLabel(k)}</option>`).join("");
+        filterEl.value = entriesFilterValue;
+      }
+
+      const filtered = entriesFilterValue === "all" ? all : all.filter(e => monthYearKey(e.date) === entriesFilterValue);
+      const entries = filtered.sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.updatedAt || 0) - (a.updatedAt || 0));
+
+      const emptyMsg = all.length === 0
+        ? "Todavía no hay recuerdos guardados.<br>Escribe algo bonito sobre tu día ✨"
+        : "No hay entradas guardadas en ese mes.";
 
       $("#recentEntries").innerHTML = entries.length ? entries.map(e => `
     <button class="entry-card" data-open-id="${e.id}">
@@ -2463,8 +2542,14 @@
         <span class="entry-date">${formatDateCompact(e.date)}</span>
         <span class="mini-mood">${moodEmoji(e.mood)}</span>
       </div>
-    </button>`).join("") : `<div class="empty">Todavía no hay recuerdos guardados.<br>Escribe algo bonito sobre tu día ✨</div>`;
+    </button>`).join("") : `<div class="empty">${emptyMsg}</div>`;
       $$("#recentEntries [data-open-id]").forEach(b => b.onclick = () => openExistingEntryById(b.dataset.openId));
+    }
+
+    async function renderHome() {
+      $("#todayLabel").textContent = formatDate(currentDate);
+      await renderCover();
+      await renderEntriesList();
     }
 
     function bindMood(container) { container.querySelectorAll(".mood-chip").forEach(b => b.onclick = () => { container.querySelectorAll(".mood-chip").forEach(x => x.classList.remove("selected")); b.classList.add("selected"); container.dataset.selected = b.dataset.mood }) }
@@ -2489,10 +2574,32 @@
       if (id === "themesPage") { showPage(id); renderThemeSettings() }
     }
 
+    const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
     async function renderCalendar() {
       const y = calendarCursor.getFullYear(), m = calendarCursor.getMonth();
-      $("#calMonth").textContent = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" }).format(calendarCursor);
       const entries = await dbGetAll("entries"); const set = new Set(entries.map(e => e.date));
+
+      const monthSelect = $("#calMonthSelect"), yearSelect = $("#calYearSelect");
+      if (monthSelect && !monthSelect.dataset.filled) {
+        monthSelect.innerHTML = MONTH_NAMES.map((name, i) => `<option value="${i}">${name}</option>`).join("");
+        monthSelect.dataset.filled = "1";
+      }
+      if (yearSelect) {
+        const nowYear = new Date().getFullYear();
+        const entryYears = entries.map(e => parseInt((e.date || "").slice(0, 4), 10)).filter(n => !isNaN(n));
+        const minYear = Math.min(nowYear - 5, ...(entryYears.length ? entryYears : [nowYear]));
+        const maxYear = Math.max(nowYear + 2, ...(entryYears.length ? entryYears : [nowYear]));
+        if (yearSelect.dataset.min !== String(minYear) || yearSelect.dataset.max !== String(maxYear)) {
+          let opts = "";
+          for (let yr = minYear; yr <= maxYear; yr++) opts += `<option value="${yr}">${yr}</option>`;
+          yearSelect.innerHTML = opts;
+          yearSelect.dataset.min = String(minYear); yearSelect.dataset.max = String(maxYear);
+        }
+      }
+      if (monthSelect) monthSelect.value = String(m);
+      if (yearSelect) yearSelect.value = String(y);
+
       const first = new Date(y, m, 1); const last = new Date(y, m + 1, 0);
       let start = (first.getDay() + 6) % 7;
       let html = "";
@@ -2895,7 +3002,7 @@
       updateSizeUI();
       requestAnimationFrame(fit);
     }
-    function openMoodChooser() { openModal('moodModal'); $("#modalPatternGridMood").innerHTML = `<div class="mood-picker">${moodButtons(freeCanvasState.mood)}</div>`; $("#modalColorRow").innerHTML = ''; $$("#modalPatternGrid .mood-chip").forEach(b => b.onclick = () => { freeCanvasState.mood = b.dataset.mood; $("#editorMoodButton").dataset.mood = b.dataset.mood; $("#editorMoodButton").textContent = moodEmoji(b.dataset.mood); closeModal('moodModal') }) }
+    function openMoodChooser() { openModal('moodModal'); $("#moodGrid").innerHTML = `<div class="mood-picker">${moodButtons(freeCanvasState.mood)}</div>`; $$("#moodGrid .mood-chip").forEach(b => b.onclick = () => { freeCanvasState.mood = b.dataset.mood; $("#editorMoodButton").dataset.mood = b.dataset.mood; $("#editorMoodButton").textContent = moodEmoji(b.dataset.mood); closeModal('moodModal') }) }
     function setupFreeEditorEvents() {
       // Replace, rather than add, the handler so "Escribir" can never trigger
       // an older editor-opening handler.
@@ -2935,9 +3042,13 @@
       $("#newToday").onclick = () => openEditor(currentDate);
       $("#prevMonth").onclick = () => { calendarCursor.setMonth(calendarCursor.getMonth() - 1); renderCalendar() };
       $("#nextMonth").onclick = () => { calendarCursor.setMonth(calendarCursor.getMonth() + 1); renderCalendar() };
+      $("#calMonthSelect").onchange = e => { calendarCursor.setMonth(Number(e.target.value)); renderCalendar() };
+      $("#calYearSelect").onchange = e => { calendarCursor.setFullYear(Number(e.target.value)); renderCalendar() };
+      $("#goToday").onclick = () => { calendarCursor = new Date(); currentDate = isoDate(new Date()); renderCalendar() };
       $$(".nav-btn").forEach(b => b.onclick = goNav);
       $$('[data-page]').filter(x => !x.classList.contains('nav-btn')).forEach(b => b.onclick = () => showPage(b.dataset.page));
       $("#importStickerBtn").onclick = () => $("#stickerInput").click();
+      $("#entriesFilter").onchange = e => { entriesFilterValue = e.target.value; renderEntriesList(); };
       $("#stickerInput").onchange = async e => { for (const file of [...e.target.files]) if (file.type.startsWith('image/')) await dbPut('stickers', { id: uid(), name: file.name, src: await fileToDataURL(file), custom: true }); e.target.value = ''; renderStickerGallery(); showToast('Sticker guardado 🎀') };
       $$(".close").forEach(b => b.onclick = () => closeModal(b.dataset.close));
       $$(".modal").forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id) }));
