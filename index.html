@@ -879,8 +879,16 @@
       margin: 14px auto;
       border-radius: 18px;
       object-fit: contain;
-      background: var(--surface);
       box-shadow: var(--shadow)
+    }
+
+    .canvas-content img.inline-media {
+      background: var(--surface)
+    }
+
+    .canvas-content img.inline-drawing.no-frame {
+      border-radius: 0;
+      box-shadow: none
     }
 
     .canvas-sticker {
@@ -1671,6 +1679,17 @@
       border-radius: 50%
     }
 
+    .bg-swatch-transparent {
+      background-color: #fff;
+      background-image:
+        linear-gradient(45deg, #ccc 25%, transparent 25%),
+        linear-gradient(-45deg, #ccc 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ccc 75%),
+        linear-gradient(-45deg, transparent 75%, #ccc 75%);
+      background-size: 10px 10px;
+      background-position: 0 0, 0 5px, 5px -5px, -5px 0px
+    }
+
 
     /* ---------- Daily cover ---------- */
     .daily-cover {
@@ -2241,12 +2260,34 @@
         <button class="draw-tool-btn active" id="toolPen" data-tool="pen"><span>✏️</span>Dibujar</button>
         <button class="draw-tool-btn" id="toolEraser" data-tool="eraser"><span>🧽</span>Borrar</button>
         <button class="draw-tool-btn" id="clearDraw"><span>🗑️</span>Limpiar</button>
+        <button class="draw-tool-btn" id="toolBg"><span>🪣</span>Fondo</button>
+      </div>
+
+      <div class="draw-color-row center-item gap-3 hidden" id="drawBgRow">
+        <button class="draw-swatch active" data-bg="#FFFFFF"
+          style="background:#FFFFFF;box-shadow:0 0 0 1px #e2d8e7,var(--shadow-sm)" title="Blanco"></button>
+        <button class="draw-swatch" data-bg="#403C58" style="background:#403C58" title="Negro"></button>
+        <button class="draw-swatch" data-bg="#EFE9FE" style="background:#EFE9FE" title="Lila pastel"></button>
+        <button class="draw-swatch" data-bg="#FCE7F1" style="background:#FCE7F1" title="Rosa pastel"></button>
+        <button class="draw-swatch" data-bg="#E0F8F2" style="background:#E0F8F2" title="Turquesa pastel"></button>
+        <button class="draw-swatch" data-bg="#FFF6D9" style="background:#FFF6D9" title="Amarillo pastel"></button>
+        <button class="draw-swatch bg-swatch-transparent" data-bg="transparent" title="Sin fondo"></button>
+        <div></div>
+        <label for="drawBgCustom">Custom:</label>
+        <input id="drawBgCustom" type="color" class="draw-swatch draw-swatch-custom" value="#ffffff"
+          title="Color personalizado">
       </div>
 
       <div class="draw-size-row">
         <span class="draw-size-label">Grosor</span>
         <input id="drawSize" type="range" min="1" max="40" value="4">
         <span id="drawSizeValue" class="draw-size-value">4 px</span>
+      </div>
+
+      <div class="draw-size-row">
+        <span class="draw-size-label">Opacidad</span>
+        <input id="drawOpacity" type="range" min="5" max="100" value="100">
+        <span id="drawOpacityValue" class="draw-size-value">100%</span>
       </div>
 
       <div class="draw-color-row center-item gap-3">
@@ -2373,9 +2414,37 @@
 
     const MOODS = [
       { id: "happy", emoji: "😊", label: "Feliz" },
-      { id: "love", emoji: "🥰", label: "Enamorada" },
       { id: "calm", emoji: "😌", label: "Tranquila" },
       { id: "excited", emoji: "🤩", label: "Emocionada" },
+      { id: "confident", emoji: "😎", label: "Segura" },
+      { id: "sad", emoji: "🥺", label: "Triste" },
+      { id: "pain", emoji: "😣", label: "Con dolor" },
+      { id: "love", emoji: "🥰", label: "Enamorada" },
+      { id: "anguished", emoji: "😰", label: "Angustiada" },
+      { id: "anxious", emoji: "😵‍💫", label: "Ansiosa" },
+      { id: "scared", emoji: "😨", label: "Asustada" },
+      { id: "angry", emoji: "😤", label: "Molesta" },
+      { id: "furious", emoji: "😡", label: "Enojada" },
+      { id: "tired", emoji: "😴", label: "Cansada" },
+      { id: "sleepy", emoji: "🥱", label: "Con sueño" },
+      { id: "sleepless", emoji: "🫩", label: "Sin dormir" },
+      { id: "relieved", emoji: "😮‍💨", label: "Aliviada" },
+      { id: "numb", emoji: "😶", label: "Vacía" },
+      { id: "confused", emoji: "😕", label: "Confundida" },
+      { id: "bored", emoji: "😑", label: "Aburrida" },
+      { id: "sick", emoji: "🤮", label: "Enferma" },
+      { id: "sneezy", emoji: "🤧", label: "Congestionada" },
+      { id: "fever", emoji: "🤒", label: "Con fiebre" },
+      { id: "verysad", emoji: "😭", label: "Muy triste" },
+      { id: "embarrassed", emoji: "😳", label: "Avergonzada" },
+      { id: "overwhelmed", emoji: "🤯", label: "Con la cabeza llena" },
+      { id: "festive", emoji: "🥳", label: "Festiva" },
+      { id: "serene", emoji: "😇", label: "En paz conmigo" },
+      { id: "pensive", emoji: "🤔", label: "Pensativa" },
+      { id: "nervous", emoji: "😅", label: "Nerviosa" },
+      { id: "melting", emoji: "🫠", label: "Derritiéndome" },
+      { id: "heartbroken", emoji: "💔", label: "Con el corazón roto" },
+      { id: "loved", emoji: "❤️", label: "Querida" },
       { id: "grateful", emoji: "🙏", label: "Agradecida" },
       { id: "peaceful", emoji: "🕊️", label: "En paz" },
       { id: "hopeful", emoji: "🌈", label: "Esperanzada" },
@@ -2383,35 +2452,19 @@
       { id: "cloudy", emoji: "☁️", label: "Nublada" },
       { id: "rainy", emoji: "🌧️", label: "Melancólica" },
       { id: "stormy", emoji: "⛈️", label: "Tormentosa" },
-      { id: "sad", emoji: "🥺", label: "Triste" },
-      { id: "verysad", emoji: "😭", label: "Muy triste" },
-      { id: "heartbroken", emoji: "💔", label: "Con el corazón roto" },
-      { id: "pain", emoji: "😣", label: "Con dolor" },
-      { id: "anguished", emoji: "😰", label: "Angustiada" },
-      { id: "anxious", emoji: "😵‍💫", label: "Ansiosa" },
-      { id: "scared", emoji: "😨", label: "Asustada" },
-      { id: "angry", emoji: "😤", label: "Molesta" },
-      { id: "furious", emoji: "😡", label: "Enojada" },
-      { id: "tired", emoji: "😴", label: "Cansada" },
-      { id: "numb", emoji: "😶", label: "Vacía" },
-      { id: "confused", emoji: "😕", label: "Confundida" },
-      { id: "bored", emoji: "😑", label: "Aburrida" },
-      { id: "sick", emoji: "🤮", label: "Enferma" },
-      { id: "loved", emoji: "❤️", label: "Querida" },
       { id: "tearful", emoji: "💧", label: "Con ganas de llorar" },
-      { id: "sleepy", emoji: "🥱", label: "Con sueño" },
-      { id: "embarrassed", emoji: "😳", label: "Avergonzada" },
-      { id: "overwhelmed", emoji: "🤯", label: "Con la cabeza llena" },
-      { id: "relieved", emoji: "😮‍💨", label: "Aliviada" },
-      { id: "festive", emoji: "🥳", label: "Festiva" },
-      { id: "serene", emoji: "😇", label: "En paz conmigo" },
-      { id: "pensive", emoji: "🤔", label: "Pensativa" },
-      { id: "nervous", emoji: "😅", label: "Nerviosa" },
-      { id: "melting", emoji: "🫠", label: "Derritiéndome" },
       { id: "nostalgic", emoji: "🌙", label: "Nostálgica" },
       { id: "energetic", emoji: "🔥", label: "Con energía" },
-      { id: "cold", emoji: "🧊", label: "Fría por dentro" },
-      { id: "celebrating", emoji: "🎉", label: "Celebrando" }
+      { id: "cold", emoji: "❄️", label: "Fría" },
+      { id: "cookie", emoji: "🍪", label: "Galleta" },
+      { id: "wine", emoji: "🍷", label: "Vino" },
+      { id: "graduation", emoji: "🎓", label: "Graduación" },
+      { id: "book", emoji: "📒", label: "Libro" },
+      { id: "working", emoji: "💻", label: "Trabajando" },
+      { id: "music", emoji: "🎧", label: "Música" },
+      { id: "travel", emoji: "✈️", label: "Viaje" },
+      { id: "shining", emoji: "✨", label: "Brillando" },
+      { id: "bivalence", emoji: "🎭", label: "Bivalente" },
     ];
 
     const PATTERNS = [
@@ -3084,15 +3137,19 @@
       const canvas = $("#drawCanvas"), bgCanvas = $("#drawBgCanvas");
       const ctx = canvas.getContext("2d", { willReadFrequently: true }), bgCtx = bgCanvas.getContext("2d");
       const sizeInput = $("#drawSize"), sizeValue = $("#drawSizeValue");
+      const opacityInput = $("#drawOpacity"), opacityValue = $("#drawOpacityValue");
       const colorInput = $("#drawColor");
-      const swatches = $$(".draw-color-row .draw-swatch");
+      const swatches = $$(".draw-color-row .draw-swatch[data-color]");
       const toolPen = $("#toolPen"), toolEraser = $("#toolEraser");
+      const toolBg = $("#toolBg"), bgRow = $("#drawBgRow");
+      const bgSwatches = $$("#drawBgRow .draw-swatch[data-bg]");
+      const bgCustom = $("#drawBgCustom");
       const undoBtn = $("#drawUndo"), redoBtn = $("#drawRedo");
-      const PAPER_COLOR = "#FFFFFF";
 
       let drawing = false;
       let currentTool = "pen";
       let currentColor = colorInput.value;
+      let currentBg = "#FFFFFF";
       let undoStack = [];
       let redoStack = [];
 
@@ -3108,14 +3165,22 @@
       }
       function setBackground() {
         const r = canvas.getBoundingClientRect();
-        bgCtx.save(); bgCtx.globalAlpha = 1; bgCtx.fillStyle = PAPER_COLOR; bgCtx.fillRect(0, 0, r.width, r.height); bgCtx.restore();
+        bgCtx.save();
+        bgCtx.clearRect(0, 0, r.width, r.height);
+        if (currentBg !== "transparent") {
+          bgCtx.globalAlpha = 1;
+          bgCtx.fillStyle = currentBg;
+          bgCtx.fillRect(0, 0, r.width, r.height);
+        }
+        bgCtx.restore();
       }
       function applyBrush() {
         ctx.lineWidth = Number(sizeInput.value); ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctx.globalAlpha = 1;
         if (currentTool === "eraser") {
+          ctx.globalAlpha = 1;
           ctx.globalCompositeOperation = "destination-out";
         } else {
+          ctx.globalAlpha = Number(opacityInput.value) / 100;
           ctx.globalCompositeOperation = "source-over";
           ctx.strokeStyle = currentColor;
         }
@@ -3170,8 +3235,20 @@
         (swatchEl || colorInput).classList.add("active");
         applyBrush();
       }
+      function selectBg(value, swatchEl) {
+        currentBg = value;
+        setBackground();
+        bgSwatches.forEach(s => s.classList.remove("active"));
+        bgCustom.classList.remove("active");
+        (swatchEl || bgCustom).classList.add("active");
+        bgRow.classList.add("hidden");
+      }
       function updateSizeUI() {
         sizeValue.textContent = Number(sizeInput.value) + " px";
+        applyBrush();
+      }
+      function updateOpacityUI() {
+        opacityValue.textContent = Number(opacityInput.value) + "%";
         applyBrush();
       }
       function pos(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top } }
@@ -3188,10 +3265,16 @@
       canvas.onpointerup = finish; canvas.onpointercancel = finish;
 
       sizeInput.oninput = updateSizeUI;
+      opacityInput.oninput = updateOpacityUI;
       swatches.forEach(s => s.onclick = () => selectColor(s.dataset.color, s));
       colorInput.oninput = () => selectColor(colorInput.value, null);
       toolPen.onclick = () => selectTool("pen");
       toolEraser.onclick = () => selectTool("eraser");
+      toolBg.onmousedown = e => e.preventDefault();
+      toolBg.onclick = () => bgRow.classList.toggle("hidden");
+      bgSwatches.forEach(s => { s.onmousedown = e => e.preventDefault(); s.onclick = () => selectBg(s.dataset.bg, s); });
+      bgCustom.onmousedown = e => e.preventDefault();
+      bgCustom.onchange = () => selectBg(bgCustom.value, null);
       undoBtn.onclick = undo;
       redoBtn.onclick = redo;
 
@@ -3205,12 +3288,16 @@
         const r = canvas.getBoundingClientRect(), d = Math.max(1, window.devicePixelRatio || 1);
         const out = document.createElement("canvas"); out.width = Math.round(r.width * d); out.height = Math.round(r.height * d);
         const octx = out.getContext("2d"); octx.drawImage(bgCanvas, 0, 0); octx.drawImage(canvas, 0, 0);
-        const img = document.createElement("img"); img.src = out.toDataURL("image/png"); img.className = "inline-drawing"; img.contentEditable = "false";
+        const img = document.createElement("img");
+        img.src = out.toDataURL("image/png");
+        img.className = "inline-drawing" + (currentBg === "transparent" ? " no-frame" : "");
+        img.contentEditable = "false";
         insertNodeAtCursor(img); closeModal("drawModal"); $("#canvasContent").focus();
       };
 
       selectTool("pen");
       updateSizeUI();
+      updateOpacityUI();
       requestAnimationFrame(fit);
     }
     function openMoodChooser() { openModal('moodModal'); $("#moodGrid").innerHTML = `<div class="mood-picker">${moodButtons(freeCanvasState.mood)}</div>`; $$("#moodGrid .mood-chip").forEach(b => b.onclick = () => { freeCanvasState.mood = b.dataset.mood; $("#editorMoodButton").dataset.mood = b.dataset.mood; $("#editorMoodButton").textContent = moodEmoji(b.dataset.mood); closeModal('moodModal') }) }
@@ -3237,7 +3324,7 @@
         s.onclick = () => setTextColor(s.dataset.color);
       });
       $("#textColorCustom").onmousedown = e => e.preventDefault();
-      $("#textColorCustom").oninput = () => setTextColor($("#textColorCustom").value);
+      $("#textColorCustom").onchange = () => setTextColor($("#textColorCustom").value);
       $("#canvasContent").addEventListener("change", e => {
         if (!e.target.classList.contains("check-box")) return;
         const item = e.target.closest(".check-item");
