@@ -93,6 +93,20 @@
       color: var(--ink)
     }
 
+    .hw-30 {
+      height: 30px !important;
+      width: 30px !important;
+    }
+
+    .hw-38 {
+      height: 38px !important;
+      width: 38px !important;
+    }
+
+    .rounded-xs {
+      border-radius: 8px !important;
+    }
+
     .center {
       display: flex !important;
       align-items: center;
@@ -1919,6 +1933,7 @@
         <button class="key" data-key="7">7</button><button class="key" data-key="8">8</button><button class="key"
           data-key="9">9</button>
         <button class="key zero" data-key="0">0</button>
+        <button class="key" id="pinDelete" title="Borrar">⌫</button>
       </div>
       <div class="lock-note">Tu PIN se guarda en este dispositivo. Puedes cambiarlo desde Estilo → Seguridad.
       </div>
@@ -2005,12 +2020,17 @@
           </div><button id="goToday" class="secondary-btn">Hoy</button>
         </div>
         <div class="calendar">
-          <div class="cal-head"><button id="prevMonth" class="cal-nav">‹</button>
+          <div class="cal-head">
+            <button id="prevMonth" class="cal-nav hw-38 center rounded-xs">
+              <i class="uil uil-angle-left icon-md"></i>
+            </button>
             <div class="cal-selects">
               <select id="calMonthSelect" class="cal-select" aria-label="Mes"></select>
               <select id="calYearSelect" class="cal-select" aria-label="Año"></select>
             </div>
-            <button id="nextMonth" class="cal-nav">›</button>
+            <button id="nextMonth" class="cal-nav hw-38 center rounded-xs">
+              <i class="uil uil-angle-right icon-md"></i>
+            </button>
           </div>
           <div class="weekdays">
             <div class="weekday">LUN</div>
@@ -2376,7 +2396,22 @@
       { id: "numb", emoji: "😶", label: "Vacía" },
       { id: "confused", emoji: "😕", label: "Confundida" },
       { id: "bored", emoji: "😑", label: "Aburrida" },
-      { id: "sick", emoji: "🤮", label: "Enferma" }
+      { id: "sick", emoji: "🤮", label: "Enferma" },
+      { id: "loved", emoji: "❤️", label: "Querida" },
+      { id: "tearful", emoji: "💧", label: "Con ganas de llorar" },
+      { id: "sleepy", emoji: "🥱", label: "Con sueño" },
+      { id: "embarrassed", emoji: "😳", label: "Avergonzada" },
+      { id: "overwhelmed", emoji: "🤯", label: "Con la cabeza llena" },
+      { id: "relieved", emoji: "😮‍💨", label: "Aliviada" },
+      { id: "festive", emoji: "🥳", label: "Festiva" },
+      { id: "serene", emoji: "😇", label: "En paz conmigo" },
+      { id: "pensive", emoji: "🤔", label: "Pensativa" },
+      { id: "nervous", emoji: "😅", label: "Nerviosa" },
+      { id: "melting", emoji: "🫠", label: "Derritiéndome" },
+      { id: "nostalgic", emoji: "🌙", label: "Nostálgica" },
+      { id: "energetic", emoji: "🔥", label: "Con energía" },
+      { id: "cold", emoji: "🧊", label: "Fría por dentro" },
+      { id: "celebrating", emoji: "🎉", label: "Celebrando" }
     ];
 
     const PATTERNS = [
@@ -2704,8 +2739,8 @@
       if (yearSelect) {
         const nowYear = new Date().getFullYear();
         const entryYears = entries.map(e => parseInt((e.date || "").slice(0, 4), 10)).filter(n => !isNaN(n));
-        const minYear = Math.min(nowYear - 5, ...(entryYears.length ? entryYears : [nowYear]));
-        const maxYear = Math.max(nowYear + 2, ...(entryYears.length ? entryYears : [nowYear]));
+        const minYear = Math.min(nowYear - 100, ...(entryYears.length ? entryYears : [nowYear]));
+        const maxYear = Math.max(nowYear + 5, ...(entryYears.length ? entryYears : [nowYear]));
         if (yearSelect.dataset.min !== String(minYear) || yearSelect.dataset.max !== String(maxYear)) {
           let opts = "";
           for (let yr = minYear; yr <= maxYear; yr++) opts += `<option value="${yr}">${yr}</option>`;
@@ -3002,6 +3037,9 @@
     }
     function insertChecklistItem() {
       $("#canvasContent").focus();
+      const preSel = window.getSelection();
+      const selectedText = preSel && !preSel.isCollapsed ? preSel.toString().trim() : "";
+
       exitListIfActive();
 
       const sel = window.getSelection();
@@ -3018,9 +3056,10 @@
         }
       }
 
+      const isPlaceholder = !selectedText;
       const div = document.createElement("div");
       div.className = "check-item";
-      div.innerHTML = '<input type="checkbox" class="check-box"><span class="check-text" spellcheck="false">Nueva tarea</span>';
+      div.innerHTML = `<input type="checkbox" class="check-box"><span class="check-text" spellcheck="false">${escapeHTML(isPlaceholder ? "Nueva tarea" : selectedText)}</span>`;
       insertNodeAtCursor(div);
 
       // Una línea vacía después, para que el cursor no se quede "dentro" de la tarea.
@@ -3030,7 +3069,12 @@
 
       const span = div.querySelector(".check-text");
       const range = document.createRange();
-      range.selectNodeContents(span);
+      if (isPlaceholder) {
+        range.selectNodeContents(span); // "Nueva tarea": todo seleccionado, listo para sobrescribir
+      } else {
+        range.selectNodeContents(span);
+        range.collapse(false); // texto ya escrito por ti: cursor al final, sin borrarlo
+      }
       sel.removeAllRanges();
       sel.addRange(range);
       $("#canvasContent").focus();
@@ -3253,7 +3297,13 @@
     }
     function bindEvents() {
       renderPinDots();
-      $$(".key").forEach(k => k.onclick = () => { if (pinBuffer.length < currentPin.length) { pinBuffer += k.dataset.key; renderPinDots(); if (pinBuffer.length === currentPin.length) setTimeout(unlock, 100) } });
+      $$(".key[data-key]").forEach(k => k.onclick = () => { if (pinBuffer.length < currentPin.length) { pinBuffer += k.dataset.key; renderPinDots(); if (pinBuffer.length === currentPin.length) setTimeout(unlock, 100) } });
+      $("#pinDelete").onclick = () => {
+        if (!pinBuffer.length) return;
+        pinBuffer = pinBuffer.slice(0, -1);
+        $("#pinError").textContent = "";
+        renderPinDots();
+      };
       $("#lockBtn").onclick = lock;
       $("#newToday").onclick = () => openEditor(currentDate);
       $("#prevMonth").onclick = () => { calendarCursor.setMonth(calendarCursor.getMonth() - 1); renderCalendar() };
