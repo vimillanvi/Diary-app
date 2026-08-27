@@ -93,15 +93,6 @@
       color: var(--ink)
     }
 
-    .hw-30 {
-      height: 30px !important;
-      width: 30px !important;
-    }
-
-    .rounded-xs {
-      border-radius: 8px !important;
-    }
-
     .center {
       display: flex !important;
       align-items: center;
@@ -830,6 +821,35 @@
       word-break: break-word
     }
 
+    .canvas-content ul,
+    .canvas-content ol {
+      margin: 8px 0;
+      padding-left: 24px
+    }
+
+    .canvas-content li {
+      margin: 4px 0
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0
+    }
+
+    .check-item .check-box {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      accent-color: var(--lilac)
+    }
+
+    .check-item.checked .check-text {
+      text-decoration: line-through;
+      color: var(--muted)
+    }
+
     .canvas-title:empty:before,
     .canvas-content:empty:before {
       content: attr(data-placeholder);
@@ -874,15 +894,95 @@
       max-width: 690px;
       margin: 0;
       display: flex;
-      justify-content: center;
-      gap: 7px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
       padding: 9px;
       border-radius: 24px;
       background: rgba(255, 253, 251, .88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       box-shadow: var(--shadow-lg);
+    }
+
+    .format-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .format-btn {
+      min-width: 36px;
+      height: 32px;
+      padding: 4px 8px;
+      border-radius: 11px;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      transition: .12s
+    }
+
+    .format-btn:active {
+      transform: scale(.92);
+      background: var(--lilac-soft)
+    }
+
+    .format-btn.active {
+      background: linear-gradient(135deg, var(--lilac-soft), var(--pink-soft));
+      box-shadow: 0 0 0 2px var(--lilac)
+    }
+
+
+    .text-color-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 2px
+    }
+
+    .text-color-swatch {
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      border-radius: 50%;
+      box-shadow: var(--shadow-sm);
+      transition: transform .12s
+    }
+
+    .text-color-swatch:active {
+      transform: scale(.88)
+    }
+
+    .text-color-custom {
+      padding: 0;
+      border: 0;
+      cursor: pointer;
+      background: conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #30b0c7, #007aff, #af52de, #ff2d55, #ff3b30)
+    }
+
+    .text-color-custom::-webkit-color-swatch-wrapper {
+      padding: 0;
+      border-radius: 50%
+    }
+
+    .text-color-custom::-webkit-color-swatch {
+      border: 0;
+      border-radius: 50%
+    }
+
+    .text-color-custom::-moz-color-swatch {
+      border: 0;
+      border-radius: 50%
+    }
+
+    .tools-row {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      flex-wrap: wrap
     }
 
     .canvas-tool {
@@ -1902,21 +2002,15 @@
           <div>
             <h2>Mi calendario ♡</h2>
             <p>Tus recuerdos, día por día.</p>
-          </div>
-          <button id="goToday" class="secondary-btn">Hoy</button>
+          </div><button id="goToday" class="secondary-btn">Hoy</button>
         </div>
         <div class="calendar">
-          <div class="cal-head">
-            <button id="prevMonth" class="cal-nav hw-30 center rounded-xs">
-              <i class="uil uil-angle-left icon-md"></i>
-            </button>
+          <div class="cal-head"><button id="prevMonth" class="cal-nav">‹</button>
             <div class="cal-selects">
               <select id="calMonthSelect" class="cal-select" aria-label="Mes"></select>
               <select id="calYearSelect" class="cal-select" aria-label="Año"></select>
             </div>
-            <button id="nextMonth" class="cal-nav hw-30 center rounded-xs">
-              <i class="uil uil-angle-right icon-md"></i>
-            </button>
+            <button id="nextMonth" class="cal-nav">›</button>
           </div>
           <div class="weekdays">
             <div class="weekday">LUN</div>
@@ -2028,12 +2122,34 @@
           </div>
           <input id="imageInput" type="file" accept="image/*" multiple class="hidden">
           <div class="canvas-toolbar">
-            <button class="canvas-tool" id="addImage"><span>🖼️</span><b>Imagen</b></button>
-            <button class="canvas-tool" id="openStickers"><span>🎀</span><b>Sticker</b></button>
-            <button class="canvas-tool" id="openDraw"><span>✏️</span><b>Dibujar</b></button>
-            <button class="canvas-tool" id="openTheme"><span>🎨</span><b>Tema</b></button>
-            <button class="canvas-tool" id="openMood"><span>☺️</span><b>Ánimo</b></button>
-            <button class="canvas-tool" id="saveEntry"><span>♡</span><b>Guardar</b></button>
+            <div class="format-row">
+              <button class="format-btn" id="fmtBold" title="Negrita"><b>B</b></button>
+              <button class="format-btn" id="fmtItalic" title="Cursiva"><i>I</i></button>
+              <button class="format-btn" id="fmtStrike" title="Tachado"><s>S</s></button>
+              <button class="format-btn" id="fmtUl" title="Lista">☰</button>
+              <button class="format-btn" id="fmtOl" title="Lista numerada">1.</button>
+              <button class="format-btn" id="fmtCheck" title="Lista de tareas">☑</button>
+              <button class="format-btn" id="fmtColorToggle" title="Color de texto">A</button>
+            </div>
+            <div class="text-color-row hidden" id="textColorRow">
+              <button class="text-color-swatch" data-color="#403C58" style="background:#403C58"
+                title="Predeterminado"></button>
+              <button class="text-color-swatch" data-color="#8D74E8" style="background:#8D74E8"></button>
+              <button class="text-color-swatch" data-color="#EE8DC0" style="background:#EE8DC0"></button>
+              <button class="text-color-swatch" data-color="#5FC7B4" style="background:#5FC7B4"></button>
+              <button class="text-color-swatch" data-color="#F5A623" style="background:#F5A623"></button>
+              <button class="text-color-swatch" data-color="#E85D5D" style="background:#E85D5D"></button>
+              <input id="textColorCustom" type="color" class="text-color-swatch text-color-custom" value="#403c58"
+                title="Color personalizado">
+            </div>
+            <div class="tools-row">
+              <button class="canvas-tool" id="addImage"><span>🖼️</span><b>Imagen</b></button>
+              <button class="canvas-tool" id="openStickers"><span>🎀</span><b>Sticker</b></button>
+              <button class="canvas-tool" id="openDraw"><span>✏️</span><b>Dibujar</b></button>
+              <button class="canvas-tool" id="openTheme"><span>🎨</span><b>Tema</b></button>
+              <button class="canvas-tool" id="openMood"><span>☺️</span><b>Ánimo</b></button>
+              <button class="canvas-tool" id="saveEntry"><span>♡</span><b>Guardar</b></button>
+            </div>
           </div>
         </div>
       </section>
@@ -2868,6 +2984,57 @@
     function stripHTML(h) { const d = document.createElement('div'); d.innerHTML = h; return d.innerText || '' }
     function addImageInline(file) { return fileToDataURL(file).then(src => { const img = document.createElement('img'); img.src = src; img.className = 'inline-media'; img.alt = 'Imagen del diario'; img.contentEditable = 'false'; insertNodeAtCursor(img); $("#canvasContent").focus() }) }
     function insertStickerInline(src) { const wrap = document.createElement('span'); wrap.className = 'canvas-sticker'; wrap.contentEditable = 'false'; wrap.innerHTML = `<img src="${src}" alt="sticker">`; insertNodeAtCursor(wrap); $("#canvasContent").focus() }
+    function execFormat(cmd, value = null) { $("#canvasContent").focus(); document.execCommand(cmd, false, value) }
+    function setTextColor(color) {
+      execFormat("foreColor", color);
+      $("#fmtColorToggle").style.color = color;
+      $("#textColorRow").classList.add("hidden");
+    }
+    function closestInEditor(node, selector) {
+      const el = node && node.nodeType === 1 ? node : node?.parentElement;
+      return el ? el.closest(selector) : null;
+    }
+    function exitListIfActive() {
+      // Si el cursor está dentro de una lista con viñetas o numerada, la des-activa
+      // para que lo siguiente que insertemos no quede atrapado dentro de un <li>.
+      if (document.queryCommandState("insertUnorderedList")) document.execCommand("insertUnorderedList");
+      if (document.queryCommandState("insertOrderedList")) document.execCommand("insertOrderedList");
+    }
+    function insertChecklistItem() {
+      $("#canvasContent").focus();
+      exitListIfActive();
+
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        const existingItem = closestInEditor(sel.anchorNode, ".check-item");
+        if (existingItem) {
+          // Si ya estamos dentro de otra tarea, movemos el cursor justo después
+          // de ella para que la nueva tarea no se apile en la misma línea.
+          const range = document.createRange();
+          range.setStartAfter(existingItem);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+
+      const div = document.createElement("div");
+      div.className = "check-item";
+      div.innerHTML = '<input type="checkbox" class="check-box"><span class="check-text" spellcheck="false">Nueva tarea</span>';
+      insertNodeAtCursor(div);
+
+      // Una línea vacía después, para que el cursor no se quede "dentro" de la tarea.
+      const after = document.createElement("div");
+      after.innerHTML = "<br>";
+      div.after(after);
+
+      const span = div.querySelector(".check-text");
+      const range = document.createRange();
+      range.selectNodeContents(span);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      $("#canvasContent").focus();
+    }
     async function openFreeStickerModal() { openModal('stickerModal'); await renderModalStickers(); $$("#modalStickerGallery [data-mid]").forEach(b => b.onclick = async () => { const s = (await allStickers()).find(x => x.id === b.dataset.mid); if (s) { insertStickerInline(s.src); closeModal('stickerModal') } }) }
     function setupFreeDraw() {
       const canvas = $("#drawCanvas"), bgCanvas = $("#drawBgCanvas");
@@ -3013,6 +3180,55 @@
       $("#addImage").onclick = () => $("#imageInput").click();
       $("#imageInput").onchange = async e => { for (const f of [...e.target.files]) if (f.type.startsWith('image/')) await addImageInline(f); e.target.value = '' };
       $("#openStickers").onclick = openFreeStickerModal;
+      [["fmtBold", () => execFormat("bold")], ["fmtItalic", () => execFormat("italic")], ["fmtStrike", () => execFormat("strikeThrough")],
+      ["fmtUl", () => execFormat("insertUnorderedList")], ["fmtOl", () => execFormat("insertOrderedList")], ["fmtCheck", insertChecklistItem],
+      ["fmtColorToggle", () => $("#textColorRow").classList.toggle("hidden")]]
+        .forEach(([id, action]) => {
+          const btn = $("#" + id);
+          btn.onmousedown = e => e.preventDefault(); // no perder la selección de texto al tocar el botón
+          btn.onclick = action;
+        });
+      $$(".text-color-swatch[data-color]").forEach(s => {
+        s.onmousedown = e => e.preventDefault();
+        s.onclick = () => setTextColor(s.dataset.color);
+      });
+      $("#textColorCustom").onmousedown = e => e.preventDefault();
+      $("#textColorCustom").oninput = () => setTextColor($("#textColorCustom").value);
+      $("#canvasContent").addEventListener("change", e => {
+        if (!e.target.classList.contains("check-box")) return;
+        const item = e.target.closest(".check-item");
+        if (item) item.classList.toggle("checked", e.target.checked);
+        if (e.target.checked) e.target.setAttribute("checked", ""); else e.target.removeAttribute("checked");
+      });
+      $("#canvasContent").addEventListener("keydown", e => {
+        if (e.key !== "Enter") return;
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        const checkText = closestInEditor(sel.anchorNode, ".check-text");
+        if (!checkText) return;
+        e.preventDefault();
+        const currentItem = checkText.closest(".check-item");
+        if (!checkText.textContent.trim()) {
+          // Enter en una tarea vacía: sale del checklist a una línea normal.
+          const p = document.createElement("div");
+          p.innerHTML = "<br>";
+          currentItem.after(p);
+          currentItem.remove();
+          const range = document.createRange();
+          range.setStart(p, 0); range.collapse(true);
+          sel.removeAllRanges(); sel.addRange(range);
+          return;
+        }
+        // Enter con texto: crea la siguiente tarea justo debajo.
+        const div = document.createElement("div");
+        div.className = "check-item";
+        div.innerHTML = '<input type="checkbox" class="check-box"><span class="check-text" spellcheck="false">Nueva tarea</span>';
+        currentItem.after(div);
+        const newSpan = div.querySelector(".check-text");
+        const range = document.createRange();
+        range.selectNodeContents(newSpan);
+        sel.removeAllRanges(); sel.addRange(range);
+      });
       $("#openDraw").onclick = () => { openModal('drawModal'); setTimeout(setupFreeDraw, 60) };
       $("#openTheme").onclick = async () => { openModal('themeModal'); $("#themeModal .modal-head h3").textContent = 'Decora tu página 🎨'; await openThemeModal() };
       $("#openMood").onclick = openMoodChooser; $("#editorMoodButton").onclick = openMoodChooser;
