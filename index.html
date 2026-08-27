@@ -3251,6 +3251,7 @@
     let freeCanvasState = { date: null, mood: null, title: '', contentHTML: '', appearance: null };
     function sanitizeCanvasHTML(html) { const box = document.createElement('div'); box.innerHTML = html; box.querySelectorAll('script,iframe,object,embed,style,link').forEach(x => x.remove()); box.querySelectorAll('*').forEach(el => { [...el.attributes].forEach(a => { if (a.name.toLowerCase().startsWith('on')) el.removeAttribute(a.name) }); if (el.tagName === 'IMG' && !el.src.startsWith('data:image/')) el.remove() }); return box.innerHTML }
     function insertNodeAtCursor(node) { const sel = window.getSelection(); const content = $("#canvasContent"); if (!sel || !sel.rangeCount || !content.contains(sel.anchorNode)) { content.appendChild(node); return } const range = sel.getRangeAt(0); range.deleteContents(); range.insertNode(node); range.setStartAfter(node); range.collapse(true); sel.removeAllRanges(); sel.addRange(range) }
+
     async function openEditor(date, newEntry = false) {
       currentDate = date;
       const list = await dbEntriesByDate(date);
@@ -3267,11 +3268,13 @@
       $("#editorDateInput").value = date;
       $("#canvasTitle").textContent = freeCanvasState.title;
       $("#canvasContent").innerHTML = freeCanvasState.contentHTML;
+      rebindDrawImages();
       $("#editorMoodButton").dataset.mood = freeCanvasState.mood || "";
       $("#editorMoodButton").textContent = moodEmoji(freeCanvasState.mood);
       applyAppearance(freeCanvasState.appearance);
       showPage("editorPage");
     }
+
     async function openExistingEntryById(id) {
       const e = await dbGet("entries", id);
       if (!e) return;
@@ -3281,6 +3284,7 @@
       $("#editorDateInput").value = e.date;
       $("#canvasTitle").textContent = freeCanvasState.title;
       $("#canvasContent").innerHTML = freeCanvasState.contentHTML;
+      rebindDrawImages();
       $("#editorMoodButton").dataset.mood = freeCanvasState.mood || "";
       $("#editorMoodButton").textContent = moodEmoji(freeCanvasState.mood);
       applyAppearance(freeCanvasState.appearance);
@@ -3292,7 +3296,56 @@
       showToast("Tu página quedó guardada ♡"); renderHome(); renderCalendar();
       if (lockAfter) lock(); else showPage("homePage");
     }
-    function stripHTML(h) { const d = document.createElement('div'); d.innerHTML = h; return d.innerText || '' }
+    function stripHTML(h) {
+      const d = document.createElement('div');
+      d.innerHTML = h;
+      d.querySelectorAll('.draw-img-wrap').forEach(el => el.remove());
+      return d.innerText || '';
+    }
+
+    function rebindDrawImages() {
+      const content = $("#canvasContent");
+
+      // 1. Envolver imágenes sueltas que aún no tengan wrap
+      content.querySelectorAll("img.inline-drawing").forEach(img => {
+        if (img.closest(".draw-img-wrap")) return;
+        const wrap = document.createElement("div");
+        wrap.className = "draw-img-wrap";
+        wrap.contentEditable = "false";
+        img.contentEditable = "false";
+        img.draggable = false;
+        img.parentNode.insertBefore(wrap, img);
+        wrap.appendChild(img);
+      });
+
+      // 2. Asegurar que todo .draw-img-wrap tenga los controles necesarios
+      content.querySelectorAll(".draw-img-wrap").forEach(wrap => {
+        if (!wrap.querySelector(".draw-img-menu-btn")) {
+          const btn = document.createElement("button");
+          btn.className = "draw-img-menu-btn";
+          btn.innerHTML = "⋮";
+          btn.title = "Opciones";
+          wrap.appendChild(btn);
+        }
+        if (!wrap.querySelector(".draw-img-menu")) {
+          const menu = document.createElement("div");
+          menu.className = "draw-img-menu";
+          menu.innerHTML = `
+            <button class="crop-btn">✂️ Recortar</button>
+            <button class="resize-btn">↔️ Redimensionar</button>
+            <button class="delete-btn">🗑️ Eliminar</button>
+          `;
+          wrap.appendChild(menu);
+        }
+        if (!wrap.querySelector(".draw-img-resize-handle")) {
+          const h = document.createElement("div");
+          h.className = "draw-img-resize-handle";
+          h.title = "Arrastra para redimensionar";
+          wrap.appendChild(h);
+        }
+      });
+    }
+
     function addImageInline(file) { return fileToDataURL(file).then(src => { const img = document.createElement('img'); img.src = src; img.className = 'inline-media'; img.alt = 'Imagen del diario'; img.contentEditable = 'false'; insertNodeAtCursor(img); $("#canvasContent").focus() }) }
     function insertStickerInline(src) { const wrap = document.createElement('span'); wrap.className = 'canvas-sticker'; wrap.contentEditable = 'false'; wrap.innerHTML = `<img src="${src}" alt="sticker">`; insertNodeAtCursor(wrap); $("#canvasContent").focus() }
     function execFormat(cmd, value = null) { $("#canvasContent").focus(); document.execCommand(cmd, false, value) }
@@ -3356,6 +3409,7 @@
       $("#canvasContent").focus();
     }
     async function openFreeStickerModal() { openModal('stickerModal'); await renderModalStickers(); $$("#modalStickerGallery [data-mid]").forEach(b => b.onclick = async () => { const s = (await allStickers()).find(x => x.id === b.dataset.mid); if (s) { insertStickerInline(s.src); closeModal('stickerModal') } }) }
+
     function setupFreeDraw() {
       const canvas = $("#drawCanvas"), bgCanvas = $("#drawBgCanvas");
       const ctx = canvas.getContext("2d", { willReadFrequently: true }), bgCtx = bgCanvas.getContext("2d");
@@ -3507,14 +3561,11 @@
         const d = Math.max(1, window.devicePixelRatio || 1);
         ctx.setTransform(d, 0, 0, d, 0, 0); applyBrush();
       };
+
       $("#saveDraw").onclick = () => {
         const r = canvas.getBoundingClientRect(), d = Math.max(1, window.devicePixelRatio || 1);
         const out = document.createElement("canvas"); out.width = Math.round(r.width * d); out.height = Math.round(r.height * d);
         const octx = out.getContext("2d"); octx.drawImage(bgCanvas, 0, 0); octx.drawImage(canvas, 0, 0);
-
-        const wrap = document.createElement("div");
-        wrap.className = "draw-img-wrap";
-        wrap.contentEditable = "false";
 
         const img = document.createElement("img");
         img.src = out.toDataURL("image/png");
@@ -3522,96 +3573,8 @@
         img.contentEditable = "false";
         img.draggable = false;
 
-        const menuBtn = document.createElement("button");
-        menuBtn.className = "draw-img-menu-btn";
-        menuBtn.innerHTML = "⋮";
-        menuBtn.title = "Opciones";
-
-        const menu = document.createElement("div");
-        menu.className = "draw-img-menu";
-        menu.innerHTML = `
-          <button class="crop-btn">✂️ Recortar</button>
-          <button class="resize-btn">↔️ Redimensionar</button>
-          <button class="delete-btn">🗑️ Eliminar</button>
-        `;
-
-        const handle = document.createElement("div");
-        handle.className = "draw-img-resize-handle";
-        handle.title = "Arrastra para redimensionar";
-
-        wrap.appendChild(img);
-        wrap.appendChild(menuBtn);
-        wrap.appendChild(menu);
-        wrap.appendChild(handle);
-
-        menuBtn.onmousedown = (e) => e.preventDefault();
-        menuBtn.onclick = (e) => {
-          e.stopPropagation();
-          document.querySelectorAll(".draw-img-wrap.menu-open").forEach(w => {
-            if (w !== wrap) w.classList.remove("menu-open");
-          });
-          wrap.classList.toggle("menu-open");
-        };
-
-        menu.querySelector(".delete-btn").onmousedown = (e) => e.preventDefault();
-        menu.querySelector(".delete-btn").onclick = (e) => {
-          e.stopPropagation();
-          wrap.remove();
-          $("#canvasContent").focus();
-          showToast("Dibujo eliminado");
-        };
-
-        menu.querySelector(".resize-btn").onmousedown = (e) => e.preventDefault();
-        menu.querySelector(".resize-btn").onclick = (e) => {
-          e.stopPropagation();
-          wrap.classList.toggle("resizing");
-          wrap.classList.remove("menu-open");
-          if (wrap.classList.contains("resizing")) {
-            showToast("Arrastra el punto morado para redimensionar ♡");
-          }
-        };
-
-        menu.querySelector(".crop-btn").onmousedown = (e) => e.preventDefault();
-        menu.querySelector(".crop-btn").onclick = (e) => {
-          e.stopPropagation();
-          wrap.classList.remove("menu-open");
-          openCropModal(img, wrap);
-        };
-
-        let resizing = false;
-        let rStartX, rStartY, rStartW, rStartH, ratio;
-
-        handle.onpointerdown = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          resizing = true;
-          handle.setPointerCapture(e.pointerId);
-          rStartX = e.clientX;
-          rStartY = e.clientY;
-          rStartW = img.offsetWidth;
-          rStartH = img.offsetHeight;
-          ratio = rStartW / rStartH;
-        };
-
-        handle.onpointermove = (e) => {
-          if (!resizing) return;
-          const dx = e.clientX - rStartX;
-          const dy = e.clientY - rStartY;
-          const delta = Math.max(dx, dy);
-          let newW = Math.max(60, rStartW + delta);
-          let newH = newW / ratio;
-          const contentW = $("#canvasContent").clientWidth - 20;
-          if (newW > contentW) { newW = contentW; newH = newW / ratio; }
-          img.style.width = newW + "px";
-          img.style.height = newH + "px";
-        };
-
-        handle.onpointerup = (e) => {
-          resizing = false;
-          handle.releasePointerCapture(e.pointerId);
-        };
-
-        insertNodeAtCursor(wrap);
+        insertNodeAtCursor(img);
+        rebindDrawImages();
         closeModal("drawModal");
         $("#canvasContent").focus();
       };
@@ -3623,6 +3586,7 @@
     }
 
     function openMoodChooser() { openModal('moodModal'); $("#moodGrid").innerHTML = `<div class="mood-picker">${moodButtons(freeCanvasState.mood)}</div>`; $$("#moodGrid .mood-chip").forEach(b => b.onclick = () => { freeCanvasState.mood = b.dataset.mood; $("#editorMoodButton").dataset.mood = b.dataset.mood; $("#editorMoodButton").textContent = moodEmoji(b.dataset.mood); closeModal('moodModal') }) }
+
     function setupFreeEditorEvents() {
       // Replace, rather than add, the handler so "Escribir" can never trigger
       // an older editor-opening handler.
@@ -3703,7 +3667,89 @@
       };
       $("#backEditor").onclick = () => { renderHome(); showPage('homePage') };
       $("#deleteEntry").onclick = async () => { if (confirm('¿Eliminar esta entrada? Esta acción no se puede deshacer.')) { await dbDelete('entries', freeCanvasState.id); renderHome(); renderCalendar(); showPage('homePage'); showToast('Entrada eliminada') } };
+
+      // ---------- Delegación: menú contextual de imágenes dibujadas ----------
+      $("#canvasContent").addEventListener("click", (e) => {
+        const wrap = e.target.closest(".draw-img-wrap");
+        if (!wrap) {
+          document.querySelectorAll(".draw-img-wrap.menu-open").forEach(w => w.classList.remove("menu-open"));
+          return;
+        }
+        if (e.target.closest(".draw-img-menu-btn")) {
+          e.stopPropagation();
+          document.querySelectorAll(".draw-img-wrap.menu-open").forEach(w => { if (w !== wrap) w.classList.remove("menu-open"); });
+          wrap.classList.toggle("menu-open");
+          return;
+        }
+        if (e.target.closest(".draw-img-menu .crop-btn")) {
+          e.stopPropagation();
+          wrap.classList.remove("menu-open");
+          const img = wrap.querySelector("img.inline-drawing");
+          if (img) openCropModal(img, wrap);
+          return;
+        }
+        if (e.target.closest(".draw-img-menu .resize-btn")) {
+          e.stopPropagation();
+          wrap.classList.toggle("resizing");
+          wrap.classList.remove("menu-open");
+          if (wrap.classList.contains("resizing")) showToast("Arrastra el punto morado para redimensionar ♡");
+          return;
+        }
+        if (e.target.closest(".draw-img-menu .delete-btn")) {
+          e.stopPropagation();
+          wrap.remove();
+          $("#canvasContent").focus();
+          showToast("Dibujo eliminado");
+          return;
+        }
+      });
+
+      // ---------- Delegación: redimensionar imágenes dibujadas ----------
+      let activeResize = null;
+      $("#canvasContent").addEventListener("pointerdown", (e) => {
+        const handle = e.target.closest(".draw-img-resize-handle");
+        if (!handle) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const wrap = handle.closest(".draw-img-wrap");
+        const img = wrap.querySelector("img.inline-drawing");
+        activeResize = {
+          handle,
+          img,
+          startX: e.clientX,
+          startY: e.clientY,
+          startW: img.offsetWidth,
+          startH: img.offsetHeight,
+          ratio: img.offsetWidth / img.offsetHeight
+        };
+        handle.setPointerCapture(e.pointerId);
+      });
+      $("#canvasContent").addEventListener("pointermove", (e) => {
+        if (!activeResize) return;
+        const dx = e.clientX - activeResize.startX;
+        const dy = e.clientY - activeResize.startY;
+        const delta = Math.max(dx, dy);
+        let newW = Math.max(60, activeResize.startW + delta);
+        let newH = newW / activeResize.ratio;
+        const maxW = $("#canvasContent").clientWidth - 20;
+        if (newW > maxW) { newW = maxW; newH = newW / activeResize.ratio; }
+        activeResize.img.style.width = newW + "px";
+        activeResize.img.style.height = newH + "px";
+      });
+      $("#canvasContent").addEventListener("pointerup", (e) => {
+        if (!activeResize) return;
+        activeResize.handle.releasePointerCapture(e.pointerId);
+        activeResize = null;
+      });
+
+      // Cerrar menús al hacer clic fuera
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".draw-img-wrap")) {
+          document.querySelectorAll(".draw-img-wrap.menu-open").forEach(w => w.classList.remove("menu-open"));
+        }
+      });
     }
+
     function bindEvents() {
       renderPinDots();
       $$(".key[data-key]").forEach(k => k.onclick = () => { if (pinBuffer.length < currentPin.length) { pinBuffer += k.dataset.key; renderPinDots(); if (pinBuffer.length === currentPin.length) setTimeout(unlock, 100) } });
