@@ -1942,7 +1942,8 @@
       user-select: none;
     }
 
-    .draw-img-wrap img.inline-drawing {
+    .draw-img-wrap img.inline-drawing,
+    .draw-img-wrap img.inline-media {
       display: block;
       max-width: 100%;
       height: auto;
@@ -3306,8 +3307,8 @@
     function rebindDrawImages() {
       const content = $("#canvasContent");
 
-      // 1. Envolver imágenes sueltas que aún no tengan wrap
-      content.querySelectorAll("img.inline-drawing").forEach(img => {
+      // 1. Envolver imágenes sueltas (dibujos Y fotos locales) que aún no tengan wrap
+      content.querySelectorAll("img.inline-drawing, img.inline-media").forEach(img => {
         if (img.closest(".draw-img-wrap")) return;
         const wrap = document.createElement("div");
         wrap.className = "draw-img-wrap";
@@ -3346,7 +3347,20 @@
       });
     }
 
-    function addImageInline(file) { return fileToDataURL(file).then(src => { const img = document.createElement('img'); img.src = src; img.className = 'inline-media'; img.alt = 'Imagen del diario'; img.contentEditable = 'false'; insertNodeAtCursor(img); $("#canvasContent").focus() }) }
+    function addImageInline(file) {
+      return fileToDataURL(file).then(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'inline-media';
+        img.alt = 'Imagen del diario';
+        img.contentEditable = 'false';
+        img.draggable = false;
+        insertNodeAtCursor(img);
+        rebindDrawImages();
+        $("#canvasContent").focus();
+      });
+    }
+
     function insertStickerInline(src) { const wrap = document.createElement('span'); wrap.className = 'canvas-sticker'; wrap.contentEditable = 'false'; wrap.innerHTML = `<img src="${src}" alt="sticker">`; insertNodeAtCursor(wrap); $("#canvasContent").focus() }
     function execFormat(cmd, value = null) { $("#canvasContent").focus(); document.execCommand(cmd, false, value) }
     function setTextColor(color) {
@@ -3684,7 +3698,7 @@
         if (e.target.closest(".draw-img-menu .crop-btn")) {
           e.stopPropagation();
           wrap.classList.remove("menu-open");
-          const img = wrap.querySelector("img.inline-drawing");
+          const img = wrap.querySelector("img.inline-drawing, img.inline-media");
           if (img) openCropModal(img, wrap);
           return;
         }
@@ -3712,7 +3726,7 @@
         e.preventDefault();
         e.stopPropagation();
         const wrap = handle.closest(".draw-img-wrap");
-        const img = wrap.querySelector("img.inline-drawing");
+        const img = wrap.querySelector("img.inline-drawing, img.inline-media");
         activeResize = {
           handle,
           img,
